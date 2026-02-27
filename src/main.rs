@@ -106,11 +106,20 @@ fn list_stats(vector: &mut Vec<Student>) {
             break;
         }
     }
+    //if it gets this far, name no longer exists
+    println!("No stats for the name inputted. The student has either been removed or it the wrong name.");
 }
 
-/*fn remove_student(){
+fn remove_student(vector: &mut Vec<Student>) {
+    let name = get_name();
 
-}*/
+    if let Some(position) = vector.iter().position(|student| student.name == name) {
+        vector.remove(position);
+    }
+    else {
+        println!("No student found with that name");
+    }
+}
 
 fn main() {
     //create a new student
@@ -168,7 +177,7 @@ fn main() {
 
         match choice.trim() {
             "1" => add_student(&mut many_students),
-            //"2" => remove_student(),
+            "2" => remove_student(&mut many_students),
             "3" => add_grade(&mut many_students),
             //"4" => change_grade(),
             //"5" => remove_grade(),
@@ -244,12 +253,5 @@ mod tests {
         s.add_grades(80.0);
         s.add_grades(90.0);
         assert_eq!(s.average(), 82.0);
-    }
-
-    #[test]
-    //remove a student
-    fn test_remove_student(){
-        //create a student to remove
-        //let s = Student::new(String::from("Isidora"), 1234);
     }
 }
