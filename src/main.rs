@@ -35,6 +35,83 @@ impl Student {
     }
 }
 
+//get the name of the student from user input. Use this for most functions
+fn get_name() -> String {
+    let mut name = String::new();
+    println!("Enter student name: ");
+    io::stdin().read_line(&mut name).expect("Failed to read name");
+
+    name.trim().to_string()
+}
+
+fn get_grade() -> f32 {
+    let mut grade = String::new();
+    println!("Enter a floating point number for grade (ex: 70.0): ");
+    io::stdin().read_line(&mut grade).expect("Failed to read grade");
+
+    //parse as f32
+    match grade.trim().parse::<f32>() {
+        Ok(g) => return g,
+        Err(_) => {
+            println!("Enter a valid floating point number.");
+            0.0
+        }
+    }
+}
+
+//get id. this should happen automatically.
+//find the id of the last student in the vector and iterate the count up one
+fn get_id(vector: &mut Vec<Student>) -> u32 {
+    //get the stats of the last student
+    let new_id : u32;
+    if vector.len() == 0 {
+        new_id = 00001;
+    }
+    else {
+        let last_stu = &vector[vector.len() - 1];
+        new_id = last_stu.id + 1;
+    }
+    new_id
+}
+
+fn add_grade(vector: &mut Vec<Student>){
+    let name = get_name();
+    let grade = get_grade();
+    //match the name and add grade to it
+    //what about students with the same name?? --maybe should do this by ID
+    for student in vector {
+        if student.name == name {
+            student.grades.push(grade);
+            break;
+        }
+    }
+}
+
+fn add_student(vector: &mut Vec<Student>) {
+    let name = get_name();
+    let id = get_id(vector);
+
+    let student = Student::new(name, id);
+
+    vector.push(student);
+}
+
+//list student status
+fn list_stats(vector: &mut Vec<Student>) {
+    let name = get_name();
+
+    for student in vector {
+        if student.name == name {
+            println!("Name: {} \n ID: {} \n Average: {}", student.name, student.id, student.average());
+            break;
+        }
+    }
+}
+
+/*fn remove_student(){
+
+}*/
+
 fn main() {
     //create a new student
     let mut new_stu = Student::new("Name_Here".to_string(), 1432);
@@ -68,6 +145,38 @@ fn main() {
     //now have a vector of multiple students to compare and store and remove
     let mut students = vec![new_stu, Student::new("second_stu".to_string(), 1433)];
 
+    students.push(Student::new("third".to_string(), 1434));
+    students[1].add_grades(90.0);
+
+    let mut many_students : Vec<Student> = Vec::new();
+
+    //change students with user input
+    //loop through until user breaks
+    loop {
+        println!("Here are your choices: ");
+        println!("1. Add a Student");
+        println!("2. Remove a Student");
+        println!("3. Add a Grade");
+        println!("4. Change a Grade");
+        println!("5. Remove a Grade");
+        println!("6. List a Student Stats");
+        println!("7. Exit");
+
+        let mut choice= String::new();
+        println!("Please enter your choice (enter a number): ");
+        io::stdin().read_line(&mut choice).expect("Failed to read line");
+
+        match choice.trim() {
+            "1" => add_student(&mut many_students),
+            //"2" => remove_student(),
+            "3" => add_grade(&mut many_students),
+            //"4" => change_grade(),
+            //"5" => remove_grade(),
+            "6" => list_stats(&mut many_students),
+            "7" => break,
+            _ => println!("Please enter valid choice"),
+        }
+    }
 }
 
 //Tests
