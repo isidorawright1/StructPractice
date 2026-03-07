@@ -26,9 +26,9 @@ impl Student {
         }
     }
 
-    fn add_grades(&mut self, grade: u64) {
+    /*fn add_grades(&mut self, grade: u64) {
         self.grades.push(grade);
-    }
+    }*/
 
     fn average(&self) -> u64 {
         let mut sum : u64 = 0;
@@ -49,7 +49,7 @@ impl Student {
 
     //list student status
     fn list_stats(&self) {
-        println!("Name: {} \n ID: {} \n Average: {}", self.name, self.id, self.average());
+        println!("Name: {} \n ID: {} \n Average: {} \n Passing: {} \n", self.name, self.id, self.average(), self.is_passing());
     }
 }
 
@@ -73,13 +73,25 @@ impl Register {
     {
         if self.students.len() == 0
         {
-            println!("There are no registered students at this time.");
+            println!("There are no registered students at this time.\n");
         }
         else
         {
             for student in self.students.iter_mut()
             {
-                println!("Name: {} \n ID: {} \n Average: {}", student.name, student.id, student.average());
+                println!("Name: {} \n ID: {} \n Average: {} \n", student.name, student.id, student.average());
+            }
+        }
+    }
+
+    fn add_grade(&mut self, name: String, grade: u64){
+        //match the name and add grade to it
+        //what about students with the same name?? --maybe should do this by ID
+        for student in self.students.iter_mut() {
+            if student.name == name {
+                student.grades.push(grade);
+                student.list_stats();
+                break;
             }
         }
     }
@@ -124,26 +136,10 @@ fn get_id(vector: &mut Register) -> u64 {
     new_id
 }
 
-fn add_grade(vector: &mut Register){
-    let name = get_name();
-    let grade = get_grade();
-    //match the name and add grade to it
-    //what about students with the same name?? --maybe should do this by ID
-    for student in vector.students.iter_mut() {
-        if student.name == name {
-            student.grades.push(grade);
-            break;
-        }
-    }
-}
-
 fn main() {
-    //now have a vector of multiple students to compare and store and remove
-    //let mut students = vec![new_stu, Student::new("second_stu".to_string(), 1433)];
-
+    //create a new struct for registered students and manipulate by user choice
     let mut registered_students = Register::new();
 
-    //change students with user input
     //loop through until user breaks
     loop {
         println!("======== Menu ========: ");
@@ -184,7 +180,12 @@ fn main() {
                 }
                 registered_students.remove_student(id as usize);
             },
-            "3" => add_grade(&mut registered_students),
+            "3" => {
+                let name = get_name();
+                //in the future, add loop to add many grades at once
+                let grade = get_grade();
+                registered_students.add_grade(name, grade);
+            },
             //"4" => change_grade(),
             //"5" => remove_grade(),
             "6" => {
@@ -215,52 +216,66 @@ mod tests {
     //check adding a grade
     #[test]
     fn test_add_grade_to_student(){
-        let mut s = Student::new(String::from("Isidora"), 1234);
-        s.add_grades(90);
-        assert_eq!(s.grades, vec![90]);
+        let mut r = Register {
+            students: vec![Student::new(String::from("Isidora"), 1)],
+        };
+        r.add_grade(r.students[0].name.clone(), 90);
+        assert_eq!(r.students[0].grades, vec![90]);
     }
 
     #[test]
     fn test_add_many_grades_to_student(){
-        let mut s = Student::new(String::from("Isidora"), 1234);
-        s.add_grades(90);
-        s.add_grades(80);
-        s.add_grades(72);
-        s.add_grades(60);
-        s.add_grades(45);
-        assert_eq!(s.grades, vec![90, 80, 72, 60, 45]);
+        let mut r = Register {
+            students: vec![Student::new(String::from("Isidora"), 1)],
+        };
+
+        r.add_grade(r.students[0].name.clone(), 90);
+        r.add_grade(r.students[0].name.clone(), 80);
+        r.add_grade(r.students[0].name.clone(), 72);
+        r.add_grade(r.students[0].name.clone(), 60);
+        r.add_grade(r.students[0].name.clone(), 45);
+        assert_eq!(r.students[0].grades, vec![90, 80, 72, 60, 45]);
     }
 
     #[test]
     //check passing grade
     fn test_student_passing(){
-        let mut s = Student::new("Isidora".to_string(), 1234);
-        s.add_grades(90);
-        s.add_grades(90);
-        s.add_grades(90);
-        assert_eq!(s.is_passing(), true);
+        let mut r = Register {
+            students: vec![Student::new(String::from("Isidora"), 1)],
+        };
+
+        r.add_grade(r.students[0].name.clone(), 90);
+        r.add_grade(r.students[0].name.clone(), 90);
+        r.add_grade(r.students[0].name.clone(), 90);
+        assert_eq!(r.students[0].is_passing(), true);
     }
 
     //check failing grade
     #[test]
     fn test_student_failing(){
-        let mut s = Student::new("Isidora".to_string(), 1234);
-        s.add_grades(20);
-        s.add_grades(30);
-        s.add_grades(35);
-        assert_eq!(s.is_passing(), false);
+        let mut r = Register {
+            students: vec![Student::new(String::from("Isidora"), 1)],
+        };
+
+        r.add_grade(r.students[0].name.clone(), 20);
+        r.add_grade(r.students[0].name.clone(), 30);
+        r.add_grade(r.students[0].name.clone(), 35);
+        assert_eq!(r.students[0].is_passing(), false);
     }
 
     //check average calculation
     #[test]
     fn test_student_average(){
-        let mut s = Student::new("Isidora".to_string(), 1234);
-        s.add_grades(90);
-        s.add_grades(80);
-        s.add_grades(70);
-        s.add_grades(80);
-        s.add_grades(90);
-        assert_eq!(s.average(), 82);
+        let mut r = Register {
+            students: vec![Student::new(String::from("Isidora"), 1)],
+        };
+
+        r.add_grade(r.students[0].name.clone(), 90);
+        r.add_grade(r.students[0].name.clone(), 80);
+        r.add_grade(r.students[0].name.clone(), 70);
+        r.add_grade(r.students[0].name.clone(), 80);
+        r.add_grade(r.students[0].name.clone(), 90);
+        assert_eq!(r.students[0].average(), 82);
     }
 
     #[test]
