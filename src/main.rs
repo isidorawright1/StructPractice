@@ -6,7 +6,7 @@ use titlecase::{titlecase, Titlecase};
 ///Student Struct. Consists of student information
 struct Student {
     name: String,
-    grades: Vec<f64>,
+    grades: Vec<u64>,
     id: u64,
 }
 
@@ -26,20 +26,25 @@ impl Student {
         }
     }
 
-    fn add_grades(&mut self, grade: f64) {
+    fn add_grades(&mut self, grade: u64) {
         self.grades.push(grade);
     }
 
-    fn average(&self) -> f64 {
-        let mut sum : f64 = 0.0;
-        for grade in &self.grades {
-            sum += grade;
+    fn average(&self) -> u64 {
+        let mut sum : u64 = 0;
+        if self.grades.len() == 0 {
+            0
         }
+        else {
+            for grade in &self.grades {
+                sum += grade;
+            }
 
-        sum / self.grades.len() as f64
+            sum / self.grades.len() as u64
+        }
     }
     fn is_passing(&self) -> bool {
-        self.average() > 70.0
+        self.average() > 70
     }
 
     //list student status
@@ -89,17 +94,17 @@ fn get_name() -> String {
     name.trim().titlecase().to_string()
 }
 
-fn get_grade() -> f64 {
+fn get_grade() -> u64 {
     let mut grade = String::new();
-    println!("Enter a floating point number for grade (ex: 70.0): ");
+    println!("Enter a floating point number for grade: ");
     io::stdin().read_line(&mut grade).expect("Failed to read grade");
 
-    //parse as f32
-    match grade.trim().parse::<f64>() {
+    //parse as u64
+    match grade.trim().parse::<u64>() {
         Ok(g) => return g,
         Err(_) => {
             println!("Enter a valid floating point number.");
-            0.0
+            0
         }
     }
 }
@@ -132,26 +137,6 @@ fn add_grade(vector: &mut Register){
     }
 }
 
-/*fn add_student(vector: &mut Register) {
-    let name = get_name();
-    let id = get_id(vector);
-
-    let student = Student::new(name, id);
-
-    vector.students.push(student);
-}*/
-
-/*fn remove_student(vector: &mut Vec<Student>) {
-    let name = get_name();
-
-    if let Some(position) = vector.iter().position(|student| student.name == name) {
-        vector.remove(position);
-    }
-    else {
-        println!("No student found with that name");
-    }
-}*/
-
 fn main() {
     //now have a vector of multiple students to compare and store and remove
     //let mut students = vec![new_stu, Student::new("second_stu".to_string(), 1433)];
@@ -170,11 +155,15 @@ fn main() {
         println!("6: View All Students");
         println!("7: Exit");
 
+        //get user input about what kind of functionality they want to use
         let mut choice= String::new();
         println!("Please enter your choice (enter a number): ");
+        //read in user input and store it in choice variable
         io::stdin().read_line(&mut choice).expect("Failed to read line");
 
+        //match the choice and do different thing depending on the choice
         match choice.trim() {
+            //add a student to registry
             "1" => {
                 let name = get_name();
                 let id = get_id(&mut registered_students);
@@ -182,19 +171,25 @@ fn main() {
 
                 registered_students.students[registered_students.students.len() - 1].list_stats();
             },
-            /*"2" => {
+            "2" => {
                 let name = get_name();
+                let mut id = 0;
                 for student in registered_students.students.iter_mut() {
+                    //in the future, change this so that it lists the stats of all students with the same
+                    //name and then remove the one with the id you want
                     if student.name == name {
-                        list_stats(&mut registered_students);
+                        id = student.id;
+                        break;
                     }
                 }
-                remove_student(&mut registered_students, )
-            },*/
+                registered_students.remove_student(id as usize);
+            },
             "3" => add_grade(&mut registered_students),
             //"4" => change_grade(),
             //"5" => remove_grade(),
-            //"6" => list_stats(&mut registered_students),
+            "6" => {
+                registered_students.view_all_students();
+            },
             "7" => break,
             _ => println!("Please enter valid choice"),
         }
@@ -221,28 +216,28 @@ mod tests {
     #[test]
     fn test_add_grade_to_student(){
         let mut s = Student::new(String::from("Isidora"), 1234);
-        s.add_grades(90.0);
-        assert_eq!(s.grades, vec![90.0]);
+        s.add_grades(90);
+        assert_eq!(s.grades, vec![90]);
     }
 
     #[test]
     fn test_add_many_grades_to_student(){
         let mut s = Student::new(String::from("Isidora"), 1234);
-        s.add_grades(90.0);
-        s.add_grades(80.5);
-        s.add_grades(72.6);
-        s.add_grades(60.0);
-        s.add_grades(45.0);
-        assert_eq!(s.grades, vec![90.0, 80.5, 72.6, 60.0, 45.0]);
+        s.add_grades(90);
+        s.add_grades(80);
+        s.add_grades(72);
+        s.add_grades(60);
+        s.add_grades(45);
+        assert_eq!(s.grades, vec![90, 80, 72, 60, 45]);
     }
 
     #[test]
     //check passing grade
     fn test_student_passing(){
         let mut s = Student::new("Isidora".to_string(), 1234);
-        s.add_grades(90.0);
-        s.add_grades(90.0);
-        s.add_grades(90.0);
+        s.add_grades(90);
+        s.add_grades(90);
+        s.add_grades(90);
         assert_eq!(s.is_passing(), true);
     }
 
@@ -250,9 +245,9 @@ mod tests {
     #[test]
     fn test_student_failing(){
         let mut s = Student::new("Isidora".to_string(), 1234);
-        s.add_grades(20.0);
-        s.add_grades(30.5);
-        s.add_grades(35.0);
+        s.add_grades(20);
+        s.add_grades(30);
+        s.add_grades(35);
         assert_eq!(s.is_passing(), false);
     }
 
@@ -260,21 +255,13 @@ mod tests {
     #[test]
     fn test_student_average(){
         let mut s = Student::new("Isidora".to_string(), 1234);
-        s.add_grades(90.0);
-        s.add_grades(80.0);
-        s.add_grades(70.0);
-        s.add_grades(80.0);
-        s.add_grades(90.0);
-        assert_eq!(s.average(), 82.0);
+        s.add_grades(90);
+        s.add_grades(80);
+        s.add_grades(70);
+        s.add_grades(80);
+        s.add_grades(90);
+        assert_eq!(s.average(), 82);
     }
-
-    //test for case sensitivity in name
-    //#[test]
-    /*fn test_titlecase(){
-        let mut r = Register::new();
-        let id = get_id(&mut r);
-        let s = Student::new(String::from("isidora"), id);
-    }*/
 
     #[test]
     fn test_add_student() {
@@ -293,129 +280,18 @@ mod tests {
         assert_eq!(r.students[0].id, 1);
     }
 
-}
+    #[test]
+    fn test_remove_student() {
+        //create a register struct with 2 students and remove 1
+        let mut r = Register {
+            students: vec![Student::new(String::from("Isidora"), 1),
+                           Student::new(String::from("Charles"), 2)],
+        };
 
+        r.remove_student(1);
 
-//create a new student
-/*let mut new_stu = Student::new("Name_Here".to_string(), 1432);
-
-//check! -- test has passed! now print
-println!("{} {}", new_stu.name, new_stu.id);
-
-//now add a grade -- test has passed for this too
-new_stu.add_grades(70.0);
-
-//sanity check in console
-for grade in &new_stu.grades {
-    println!("{}", grade);
-}
-
-//now get average and passing
-new_stu.add_grades(90.0);
-new_stu.add_grades(46.5);
-new_stu.add_grades(89.6);
-
-//should be 74.025
-println!("{}", new_stu.average());
-//this is passing
-if new_stu.is_passing() {
-    println!("You are passing with a: {}", new_stu.average());
-}
-else {
-    println!("You are failing with a: {}", new_stu.average());
-}
-
-students.push(Student::new("third".to_string(), 1434));
-    students[1].add_grades(90.0);
-
-    let mut many_students : Vec<Student> = Vec::new();
-
-*/
-/*
-//get the name of the student from user input. Use this for most functions
-fn get_name() -> String {
-    let mut name = String::new();
-    println!("Enter student name: ");
-    io::stdin().read_line(&mut name).expect("Failed to read name");
-
-    name.trim().to_string()
-}
-
-fn get_grade() -> f32 {
-    let mut grade = String::new();
-    println!("Enter a floating point number for grade (ex: 70.0): ");
-    io::stdin().read_line(&mut grade).expect("Failed to read grade");
-
-    //parse as f32
-    match grade.trim().parse::<f32>() {
-        Ok(g) => return g,
-        Err(_) => {
-            println!("Enter a valid floating point number.");
-            0.0
-        }
+        assert_eq!(r.students.len(), 1);
+        assert_eq!(r.students[0].name, "Charles".to_string());
+        assert_eq!(r.students[0].id, 2);
     }
 }
-
-//get id. this should happen automatically.
-//find the id of the last student in the vector and iterate the count up one
-fn get_id(vector: &mut Vec<Student>) -> u32 {
-    //get the stats of the last student
-    let new_id : u32;
-    if vector.len() == 0 {
-        new_id = 00001;
-    }
-    else {
-        let last_stu = &vector[vector.len() - 1];
-        new_id = last_stu.id + 1;
-    }
-    new_id
-}
-
-fn add_grade(vector: &mut Vec<Student>){
-    let name = get_name();
-    let grade = get_grade();
-    //match the name and add grade to it
-    //what about students with the same name?? --maybe should do this by ID
-    for student in vector {
-        if student.name == name {
-            student.grades.push(grade);
-            break;
-        }
-    }
-}
-
-fn add_student(vector: &mut Vec<Student>) {
-    let name = get_name();
-    let id = get_id(vector);
-
-    let student = Student::new(name, id);
-
-    vector.push(student);
-}
-
-//list student status
-fn list_stats(vector: &mut Vec<Student>) {
-    let name = get_name();
-
-    for student in vector {
-        if student.name == name {
-            println!("Name: {} \n ID: {} \n Average: {}", student.name, student.id, student.average());
-            break;
-        }
-    }
-    //if it gets this far, name no longer exists
-    println!("No stats for the name inputted. The student has either been removed or it the wrong name.");
-}
-
-fn remove_student(vector: &mut Vec<Student>) {
-    let name = get_name();
-
-    if let Some(position) = vector.iter().position(|student| student.name == name) {
-        vector.remove(position);
-    }
-    else {
-        println!("No student found with that name");
-    }
-}
-
-*/
