@@ -6,8 +6,17 @@ version = 4
 name = "StructPractice"
 version = "0.1.0"
 dependencies = [
+ "adder",
+ "hash-map",
+ "option",
  "titlecase",
 ]
+
+[[package]]
+name = "adder"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da860ef43d6a9bb0fcd5b152d96cfbc4e57bd2d5834eb92bbfe6847fb23436c7"
 
 [[package]]
 name = "aho-corasick"
@@ -19,10 +28,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "hash-map"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d99a417691d0b25ca276be00f41e30044f2df2371342a990507ff121096fcbd6"
+
+[[package]]
 name = "memchr"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
+
+[[package]]
+name = "option"
+version = "0.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ee17864b025f1f220299f59c265869eb5e3ec65cbb4e20b5428de66638d606c"
 
 [[package]]
 name = "regex"

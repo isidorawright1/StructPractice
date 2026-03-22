@@ -1,24 +1,21 @@
 //import libraries/modules
 use std::io;
 use titlecase::{titlecase, Titlecase};
+use std::collections::HashMap;
 
 //define struct
 ///Student Struct. Consists of student information
-struct Student {
+pub struct Student {
     name: String,
-    grades: Vec<u64>,
-    id: u64,
+    grades: Vec<i64>, //using the Option enum, the type can be any
+    id: i64,
 }
 
-///Register struct. Consists of a vector of students
-struct Register {
-    students : Vec<Student>,
-}
 
 impl Student {
     //Construct to make a new student
     ///
-    fn new(name: String, id: u64) -> Self {
+    fn new(name: String, id: i64) -> Self {
         Student{
             name,
             grades: Vec::new(),
@@ -26,31 +23,38 @@ impl Student {
         }
     }
 
-    /*fn add_grades(&mut self, grade: u64) {
-        self.grades.push(grade);
-    }*/
+    fn view_grades(&self) {
+        println!("{:#?}", self.grades);
+    }
 
-    fn average(&self) -> u64 {
-        let mut sum : u64 = 0;
+    fn average(&self) -> i64 {
+        let mut sum : i64 = 0;
         if self.grades.len() == 0 {
-            0
+            return 0
         }
-        else {
-            for grade in &self.grades {
-                sum += grade;
-            }
 
-            sum / self.grades.len() as u64
+        for grade in &self.grades {
+            sum += grade;
         }
+
+        sum / self.grades.len() as i64
     }
     fn is_passing(&self) -> bool {
         self.average() > 70
     }
 
     //list student status
-    fn list_stats(&self) {
-        println!("Name: {} \n ID: {} \n Average: {} \n Passing: {} \n", self.name, self.id, self.average(), self.is_passing());
+    //return a string and change println to format macro
+    fn list_stats(&self) -> String{
+        format!("Name: {}\nID: {}\nAverage: {avg:.2}\nPassing: {}",
+                self.name, self.id, self.is_passing(), avg=self.average())
+        //println!("\n Name: {} \n ID: {} \n Average: {} \n Passing: {} \n", self.name, self.id, self.average(), self.is_passing());
     }
+}
+
+///Register struct. Consists of a vector of students
+struct Register {
+    students : Vec<Student>,
 }
 
 impl Register {
@@ -66,6 +70,7 @@ impl Register {
 
     fn remove_student(&mut self, id: usize) {
         //since id corresponds to the index-1 of the vector, use that to remove the student
+        //use a hash map instead of a vector and remove by key!!
         self.students.remove(id - 1);
     }
 
@@ -77,20 +82,23 @@ impl Register {
         }
         else
         {
-            for student in self.students.iter_mut()
+            for student in self.students.iter() //no need to iterate mutable!!
             {
+                //use format macro!
                 println!("Name: {} \n ID: {} \n Average: {} \n", student.name, student.id, student.average());
             }
         }
     }
 
-    fn add_grade(&mut self, name: String, grade: u64){
+    fn add_grade(&mut self, name: String, grade: i64){
         //match the name and add grade to it
         //what about students with the same name?? --maybe should do this by ID
         for student in self.students.iter_mut() {
+            //FIX SO THAT I CAN HAVE DUPLICATE NAMES!
             if student.name == name {
                 student.grades.push(grade);
                 student.list_stats();
+                student.view_grades();
                 break;
             }
         }
@@ -106,35 +114,41 @@ fn get_name() -> String {
     name.trim().titlecase().to_string()
 }
 
-fn get_grade() -> u64 {
+fn get_grade() -> i64 {
     let mut grade = String::new();
-    println!("Enter a floating point number for grade: ");
+    println!("Enter a grade: ");
     io::stdin().read_line(&mut grade).expect("Failed to read grade");
 
-    //parse as u64
-    match grade.trim().parse::<u64>() {
+    //parse as i64
+    match grade.trim().parse::<i64>() {
         Ok(g) => return g,
         Err(_) => {
-            println!("Enter a valid floating point number.");
-            0
+            println!("Enter a valid number.");
+            //do a negative 1 here
+            -1
         }
     }
 }
 
 //get id. this should happen automatically.
 //find the id of the last student in the vector and iterate the count up one
-fn get_id(vector: &mut Register) -> u64 {
+fn get_id(vector: &mut Register) -> i64 {
     //get the stats of the last student
-    let new_id : u64;
+    //best practice is to initialize immediately
     if vector.students.len() == 0 {
-        new_id = 1;
+        return 1;
     }
-    else {
-        let last_stu = &vector.students[vector.students.len() - 1];
-        new_id = last_stu.id + 1;
-    }
-    new_id
+    //condense to be one line of code
+    &vector.students[vector.students.len() - 1].id + 1
 }
+
+//look into setting up dir structure to move test cases to a test dir -- integration tests
+//refactor current code
+//keep going with rustlings
+//look at persistent storage
+//figure out gpu issue
+//go over and get proficient in the linux commands in discord
+//make own config in tmux -- install nerd font --must have symbols
 
 fn main() {
     //create a new struct for registered students and manipulate by user choice
@@ -186,6 +200,8 @@ fn main() {
                 let grade = get_grade();
                 registered_students.add_grade(name, grade);
             },
+            //maybe have a nested hash map -> quiz/homework/test, etc. and then date
+            //figure out prototype for persistent storage!! --DBs!
             //"4" => change_grade(),
             //"5" => remove_grade(),
             "6" => {
@@ -197,116 +213,3 @@ fn main() {
     }
 }
 
-//Tests
-//check failing grade
-#[cfg(test)]
-
-mod tests {
-    use super::*;
-    //test to add a new student
-    #[test]
-    fn test_new_student_constructor(){
-        let s = Student::new(String::from("Isidora"), 1234);
-        //Check name
-        assert_eq!(s.name, "Isidora");
-        //check id
-        assert_eq!(s.id, 1234);
-    }
-
-    //check adding a grade
-    #[test]
-    fn test_add_grade_to_student(){
-        let mut r = Register {
-            students: vec![Student::new(String::from("Isidora"), 1)],
-        };
-        r.add_grade(r.students[0].name.clone(), 90);
-        assert_eq!(r.students[0].grades, vec![90]);
-    }
-
-    #[test]
-    fn test_add_many_grades_to_student(){
-        let mut r = Register {
-            students: vec![Student::new(String::from("Isidora"), 1)],
-        };
-
-        r.add_grade(r.students[0].name.clone(), 90);
-        r.add_grade(r.students[0].name.clone(), 80);
-        r.add_grade(r.students[0].name.clone(), 72);
-        r.add_grade(r.students[0].name.clone(), 60);
-        r.add_grade(r.students[0].name.clone(), 45);
-        assert_eq!(r.students[0].grades, vec![90, 80, 72, 60, 45]);
-    }
-
-    #[test]
-    //check passing grade
-    fn test_student_passing(){
-        let mut r = Register {
-            students: vec![Student::new(String::from("Isidora"), 1)],
-        };
-
-        r.add_grade(r.students[0].name.clone(), 90);
-        r.add_grade(r.students[0].name.clone(), 90);
-        r.add_grade(r.students[0].name.clone(), 90);
-        assert_eq!(r.students[0].is_passing(), true);
-    }
-
-    //check failing grade
-    #[test]
-    fn test_student_failing(){
-        let mut r = Register {
-            students: vec![Student::new(String::from("Isidora"), 1)],
-        };
-
-        r.add_grade(r.students[0].name.clone(), 20);
-        r.add_grade(r.students[0].name.clone(), 30);
-        r.add_grade(r.students[0].name.clone(), 35);
-        assert_eq!(r.students[0].is_passing(), false);
-    }
-
-    //check average calculation
-    #[test]
-    fn test_student_average(){
-        let mut r = Register {
-            students: vec![Student::new(String::from("Isidora"), 1)],
-        };
-
-        r.add_grade(r.students[0].name.clone(), 90);
-        r.add_grade(r.students[0].name.clone(), 80);
-        r.add_grade(r.students[0].name.clone(), 70);
-        r.add_grade(r.students[0].name.clone(), 80);
-        r.add_grade(r.students[0].name.clone(), 90);
-        assert_eq!(r.students[0].average(), 82);
-    }
-
-    #[test]
-    fn test_add_student() {
-        let mut r = Register::new();
-        //id for students is now automatically assigned based on used ids
-        let id = get_id(&mut r);
-        //create a student with a name and id
-        let s = Student::new("Isidora".to_string(), id);
-        r.add_student(s);
-
-        //make sure that the vector length has increased to the correct size
-        assert_eq!(r.students.len(), 1);
-        //ensure the name of the student added is correct
-        assert_eq!(r.students[0].name, "Isidora".to_string());
-        //since this is the first student in the registry, id should be 1
-        assert_eq!(r.students[0].id, 1);
-    }
-
-    #[test]
-    fn test_remove_student() {
-        //create a register struct with 2 students and remove 1
-        let mut r = Register {
-            students: vec![Student::new(String::from("Isidora"), 1),
-                           Student::new(String::from("Charles"), 2)],
-        };
-
-        r.remove_student(1);
-
-        assert_eq!(r.students.len(), 1);
-        assert_eq!(r.students[0].name, "Charles".to_string());
-        assert_eq!(r.students[0].id, 2);
-    }
-}

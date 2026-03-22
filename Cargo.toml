@@ -4,4 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+adder = "0.1.0"
+hash-map = "0.1.0"
+option = "0.0.0"
 titlecase = "3.6.0"
